@@ -94,7 +94,10 @@
             </div>
         </aside>
 
-        <h1 class="page-title">Dashboard - Monitoramento da Caixa D'Água</h1>
+        <div class="main-content">
+            <h1 class="page-title">Dashboard</h1>
+            <p class="card">Bem vindo! Aqui é a tela de configurações.</p>
+        </div>
 
     </div>
     
@@ -187,27 +190,33 @@
 
         async function atualizarDashboard() {
         try {
-            const res = await fetch('http://localhost:5000/api/ultimonivel'); // ajuste se necessário
-            const json = await res.json();
+            const res = await fetch('https://senai-api.onrender.com/api/nivel/historico');
+            const dados = await res.json();
 
-            const nivel = json.nivel;
-            setProgress(nivel);
-
-            const agora = new Date();
-            if (chartData.labels.length >= 10) {
-            chartData.labels.shift();
-            chartData.datasets[0].data.shift();
+            if (!Array.isArray(dados) || dados.length === 0) {
+            throw new Error('Sem dados no histórico');
             }
-            chartData.labels.push(formatHora(agora));
-            chartData.datasets[0].data.push(nivel);
+
+            const ultimo = dados[dados.length - 1];
+            setProgress(ultimo.nivel);
+
+            chartData.labels = [];
+            chartData.datasets[0].data = [];
+
+            dados.forEach(dado => {
+            chartData.labels.push(formatHora(dado.timestamp));
+            chartData.datasets[0].data.push(dado.nivel);
+            });
 
             nivelChart.update();
+
         } catch (err) {
             console.error('Erro ao buscar dados:', err);
-            colorStatus.textContent = 'Erro ao carregar dados 😢';
+            colorStatus.textContent = 'Erro ao carregar histórico 😢';
             colorStatus.style.color = '#e76f51';
         }
         }
+
 
         setInterval(atualizarDashboard, 5000);
         atualizarDashboard();
