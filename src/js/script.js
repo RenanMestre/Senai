@@ -37,7 +37,7 @@ const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matc
 const shouldUseDarkTheme = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
 document.body.classList.toggle("dark-theme", shouldUseDarkTheme);
 updateThemeIcon();
-atualizarLogo();
+
 atualizarLogo_developer();
 
 // Toggle between themes on theme button click
@@ -45,7 +45,7 @@ themeToggleBtn.addEventListener("click", () => {
   const isDark = document.body.classList.toggle("dark-theme");
   localStorage.setItem("theme", isDark ? "dark" : "light");
   updateThemeIcon();
-  atualizarLogo();
+  
   atualizarLogo_developer();
 });
 

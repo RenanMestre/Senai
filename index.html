@@ -5,6 +5,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Página inicial | Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="src/css/style.css" />
     <!-- Linking Google fonts for icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -22,7 +23,7 @@
         <aside class="sidebar collapsed">
             <!-- Sidebar header -->
             <div class="sidebar-header">
-            <img src="src/img/Letreiro.png" alt="Logo" class="header-logo" id="logo" />
+            <img src="src/img/Logo_senai.png" alt="Logo" class="header-logo"/>
             <button class="sidebar-toggle">
                 <span class="material-symbols-rounded">chevron_left</span>
             </button>
@@ -93,11 +94,7 @@
             </div>
         </aside>
 
-        <!-- Site main content -->
-        <div class="main-content">
-            <h1 class="page-title">Dashboard</h1>
-            <p class="card">Bem vindo! Aqui ficará os gráficos mostrando o monitoramento da caixa de água!</p>
-        </div>
+        <h1 class="page-title">Dashboard - Monitoramento da Caixa D'Água</h1>
 
     </div>
     
@@ -113,5 +110,108 @@
     </footer>
 
     <script src="src/js/script.js"></script>
+    <script>
+        const progressCircle = document.getElementById('progress');
+        const percentText = document.getElementById('percent-text');
+        const colorStatus = document.getElementById('color-status');
+        const radius = 100;
+        const circumference = 2 * Math.PI * radius;
+
+        progressCircle.style.strokeDasharray = circumference;
+        progressCircle.style.strokeDashoffset = circumference;
+
+        function setProgress(percent) {
+        const offset = circumference - (percent / 100) * circumference;
+        progressCircle.style.strokeDashoffset = offset;
+        percentText.textContent = percent + '%';
+
+        if (percent > 70) {
+            progressCircle.style.stroke = '#2a9d8f';
+            percentText.style.fill = '#2a9d8f';
+            colorStatus.textContent = 'Nível alto - Bom abastecimento 💧';
+            colorStatus.style.color = '#2a9d8f';
+        } else if (percent > 40) {
+            progressCircle.style.stroke = '#f4a261';
+            percentText.style.fill = '#f4a261';
+            colorStatus.textContent = 'Nível médio - Atenção ⚠️';
+            colorStatus.style.color = '#f4a261';
+        } else {
+            progressCircle.style.stroke = '#e76f51';
+            percentText.style.fill = '#e76f51';
+            colorStatus.textContent = 'Nível baixo - Reabastecer urgente 🔥';
+            colorStatus.style.color = '#e76f51';
+        }
+        }
+
+        const ctx = document.getElementById('chart').getContext('2d');
+        const chartData = {
+        labels: [],
+        datasets: [{
+            label: 'Nível (%)',
+            data: [],
+            fill: true,
+            backgroundColor: 'rgba(42, 157, 143, 0.2)',
+            borderColor: '#2a9d8f',
+            borderWidth: 3,
+            tension: 0.3,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+        }]
+        };
+
+        const nivelChart = new Chart(ctx, {
+        type: 'line',
+        data: chartData,
+        options: {
+            responsive: true,
+            animation: { duration: 1000 },
+            scales: {
+            y: {
+                suggestedMin: 0,
+                suggestedMax: 100,
+                ticks: { stepSize: 10 }
+            },
+            x: {
+                ticks: {
+                maxRotation: 45,
+                minRotation: 45
+                }
+            }
+            }
+        }
+        });
+
+        function formatHora(date) {
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        async function atualizarDashboard() {
+        try {
+            const res = await fetch('http://localhost:5000/api/ultimonivel'); // ajuste se necessário
+            const json = await res.json();
+
+            const nivel = json.nivel;
+            setProgress(nivel);
+
+            const agora = new Date();
+            if (chartData.labels.length >= 10) {
+            chartData.labels.shift();
+            chartData.datasets[0].data.shift();
+            }
+            chartData.labels.push(formatHora(agora));
+            chartData.datasets[0].data.push(nivel);
+
+            nivelChart.update();
+        } catch (err) {
+            console.error('Erro ao buscar dados:', err);
+            colorStatus.textContent = 'Erro ao carregar dados 😢';
+            colorStatus.style.color = '#e76f51';
+        }
+        }
+
+        setInterval(atualizarDashboard, 5000);
+        atualizarDashboard();
+
+    </script>
   </body>
 </html>

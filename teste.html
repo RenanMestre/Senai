@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard Nível da Água</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0; 
+      font-family: 'Roboto', sans-serif;
+      background: #f4f7fa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+      font-weight: 700;
+      color: #0077b6;
+      letter-spacing: 1.2px;
+    }
+    #dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 40px;
+      max-width: 900px;
+      width: 100%;
+    }
+    /* Gauge container */
+    #gauge {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      flex: 1 1 300px;
+      max-width: 350px;
+      text-align: center;
+    }
+    #gauge h2 {
+      margin-bottom: 20px;
+      font-weight: 700;
+      color: #023e8a;
+    }
+    .gauge-svg {
+      width: 250px;
+      height: 250px;
+      margin: 0 auto;
+    }
+    .percentage-text {
+      font-size: 3rem;
+      font-weight: 700;
+      fill: #0077b6;
+    }
+    /* Color zones text */
+    #color-status {
+      margin-top: 15px;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    /* Histórico */
+    #history {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      flex: 1 1 500px;
+      max-width: 550px;
+    }
+    #history h2 {
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #023e8a;
+    }
+    canvas {
+      width: 100% !important;
+      height: 300px !important;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: auto;
+      font-size: 0.9rem;
+      color: #555;
+      text-align: center;
+      padding: 20px 10px 0;
+      width: 100%;
+      max-width: 900px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Dashboard Nível da Caixa D'Água</h1>
+  
+  <div id="dashboard">
+    <section id="gauge">
+      <h2>Nível Atual</h2>
+      <svg class="gauge-svg" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="100" stroke="#eee" stroke-width="20" fill="none" />
+        <circle id="progress" cx="110" cy="110" r="100" stroke="#0077b6" stroke-width="20" fill="none"
+          stroke-linecap="round"
+          stroke-dasharray="628" 
+          stroke-dashoffset="628" />
+        <text x="110" y="120" text-anchor="middle" class="percentage-text" id="percent-text">0%</text>
+      </svg>
+      <div id="color-status">Carregando...</div>
+    </section>
+
+    <section id="history">
+      <h2>Histórico de Níveis</h2>
+      <canvas id="chart"></canvas>
+    </section>
+  </div>
+
+  <footer>Feito com ❤️ para o projeto SENAI - Monitoramento da Caixa d'Água</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    const progressCircle = document.getElementById('progress');
+    const percentText = document.getElementById('percent-text');
+    const colorStatus = document.getElementById('color-status');
+    const radius = 100;
+    const circumference = 2 * Math.PI * radius;
+
+    progressCircle.style.strokeDasharray = circumference;
+    progressCircle.style.strokeDashoffset = circumference;
+
+    function setProgress(percent) {
+      const offset = circumference - (percent / 100) * circumference;
+      progressCircle.style.strokeDashoffset = offset;
+      percentText.textContent = percent + '%';
+
+      // Define a cor do anel e texto baseado no nível
+      if (percent > 70) {
+        progressCircle.style.stroke = '#2a9d8f'; // verde escuro
+        percentText.style.fill = '#2a9d8f';
+        colorStatus.textContent = 'Nível alto - Bom abastecimento 💧';
+        colorStatus.style.color = '#2a9d8f';
+      } else if (percent > 40) {
+        progressCircle.style.stroke = '#f4a261'; // amarelo
+        percentText.style.fill = '#f4a261';
+        colorStatus.textContent = 'Nível médio - Atenção ⚠️';
+        colorStatus.style.color = '#f4a261';
+      } else {
+        progressCircle.style.stroke = '#e76f51'; // vermelho
+        percentText.style.fill = '#e76f51';
+        colorStatus.textContent = 'Nível baixo - Reabastecer urgente 🔥';
+        colorStatus.style.color = '#e76f51';
+      }
+    }
+
+    // Setup Chart.js
+    const ctx = document.getElementById('chart').getContext('2d');
+    const chartData = {
+      labels: [], // timestamps
+      datasets: [{
+        label: 'Nível (%)',
+        data: [],
+        fill: true,
+        backgroundColor: 'rgba(42, 157, 143, 0.2)',
+        borderColor: '#2a9d8f',
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 4,
+        pointHoverRadius: 6,
+      }]
+    };
+
+    const chartOptions = {
+      responsive: true,
+      animation: {
+        duration: 1000
+      },
+      scales: {
+        y: {
+          suggestedMin: 0,
+          suggestedMax: 100,
+          ticks: {
+            stepSize: 10,
+          }
+        },
+        x: {
+          ticks: {
+            maxRotation: 45,
+            minRotation: 45,
+          }
+        }
+      }
+    };
+
+    const nivelChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: chartOptions
+    });
+
+    // Função para formatar a hora no histórico
+    function formatHora(date) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Função para atualizar o dashboard
+    async function atualizarDashboard() {
+      try {
+        const res = await fetch('http://localhost:5000/api/ultimonivel');
+        const json = await res.json();
+
+        const nivel = json.nivel;
+        setProgress(nivel);
+
+        // Atualiza histórico
+        const agora = new Date();
+        if (chartData.labels.length >= 10) {  // mantém só últimos 10 pontos
+          chartData.labels.shift();
+          chartData.datasets[0].data.shift();
+        }
+        chartData.labels.push(formatHora(agora));
+        chartData.datasets[0].data.push(nivel);
+
+        nivelChart.update();
+      } catch (err) {
+        console.error('Erro ao buscar dados:', err);
+        colorStatus.textContent = 'Erro ao carregar dados 😢';
+        colorStatus.style.color = '#e76f51';
+      }
+    }
+
+    // Atualiza a cada 5 segundos
+    setInterval(atualizarDashboard, 5000);
+    atualizarDashboard();
+  </script>
+</body>
+</html>

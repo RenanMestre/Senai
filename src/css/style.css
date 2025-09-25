@@ -14,7 +14,7 @@
   --color-bg-secondary: #ECECFD;
   --color-bg-sidebar: #FFFFFF;
   --color-border-hr: #E2E8F0;
-  --color-hover-primary: #0c8696;
+  --color-hover-primary: #810303;
   --color-hover-secondary: #e2e2fb;
   --color-shadow: rgba(0, 0, 0, 0.05);
 }
@@ -59,10 +59,9 @@ body {
   border-bottom: 1px solid var(--color-border-hr);
 }
 .sidebar-header .header-logo {
-  height: 60px;
+  height: 30px;
   display: block;
   object-fit: contain;
-  border-radius: 50%;
   transition: opacity 0.4s ease;
 }
 .sidebar.collapsed .header-logo {
@@ -264,6 +263,84 @@ body.dark-theme .theme-toggle-indicator {
   background-color: var(--color-bg-sidebar);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
+
+/* Gráfico e tabela */
+canvas#graficoNivel {
+  max-width: 100%;
+}
+
+#tabelaNiveis {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1em;
+}
+
+#tabelaNiveis th,
+#tabelaNiveis td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+#tabelaNiveis th {
+  background-color: #f0f0f0;
+}
+
+/* Card improvements */
+.card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+body.dark .card {
+  background-color: #1f1f1f;
+  color: #f0f0f0;
+}
+
+body.dark #tabelaNiveis th {
+  background-color: #333;
+}
+
+body.dark #tabelaNiveis td {
+  border-color: #444;
+}
+
+.dashboard-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.gauge-section, .history-section {
+  flex: 1 1 400px;
+  min-width: 300px;
+}
+
+.gauge-svg {
+  width: 100%;
+  max-width: 250px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.percentage-text {
+  font-size: 3rem;
+  font-weight: 700;
+  fill: #0077b6;
+}
+
+#color-status {
+  margin-top: 15px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
 
 .site-footer {
   margin-top: auto;
