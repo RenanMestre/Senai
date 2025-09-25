@@ -57,3 +57,60 @@ canvas {
     max-width: 100%;
 }
 
+/* Para telas menores que 1200px (tablets e desktops pequenos) */
+@media (max-width: 1200px) {
+    .chart-wrapper {
+        width: 100%; /* Para ocupar o espaço disponível */
+        padding: 1.5rem;
+    }
+
+    #percent-text {
+        font-size: 28px;
+    }
+}
+
+/* Para telas menores que 768px (celulares maiores e tablets em modo retrato) */
+@media (max-width: 768px) {
+    .dashboard-layout {
+        padding: 1rem;
+        gap: 1.5rem;
+    }
+
+    .circle-wrapper {
+        max-width: 280px;
+        padding: 1.5rem;
+    }
+
+    #percent-text {
+        font-size: 24px;
+    }
+
+    .status-text {
+        font-size: 1rem;
+    }
+
+    .chart-wrapper {
+        width: 100%;
+        padding: 1.5rem 1rem;
+    }
+}
+
+/* Para telas muito pequenas, menos que 480px (celulares pequenos) */
+@media (max-width: 480px) {
+    .circle-wrapper {
+        max-width: 100%;
+        padding: 1rem;
+    }
+
+    #percent-text {
+        font-size: 20px;
+    }
+
+    .status-text {
+        font-size: 0.9rem;
+    }
+
+    .chart-wrapper {
+        padding: 1rem;
+    }
+}
