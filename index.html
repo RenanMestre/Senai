@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="src/css/style.css" />
     <!-- Linking Google fonts for icons -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
     <!-- Navbar -->
@@ -94,9 +95,20 @@
             </div>
         </aside>
 
-        <div class="main-content">
-            <h1 class="page-title">Dashboard</h1>
-            <p class="card">Bem vindo! Aqui é a tela de configurações.</p>
+        <div class="dashboard-section">
+        <!-- Medidor Circular -->
+        <div class="circle-wrapper">
+            <svg width="250" height="250">
+            <circle r="100" cx="125" cy="125" stroke="#ddd" stroke-width="20" fill="none" />
+            <circle id="progress" r="100" cx="125" cy="125" stroke-width="20" fill="none" transform="rotate(-90 125 125)" />
+            <text id="percent-text" x="125" y="135" text-anchor="middle" font-size="24" fill="#000">0%</text>
+            </svg>
+            <p id="color-status" class="status-text">Carregando...</p>
+        </div>
+
+        <!-- Gráfico de Histórico -->
+        <div class="chart-wrapper">
+                <canvas id="chart" width="600" height="300"></canvas>
         </div>
 
     </div>
@@ -124,32 +136,32 @@
         progressCircle.style.strokeDashoffset = circumference;
 
         function setProgress(percent) {
-        const offset = circumference - (percent / 100) * circumference;
-        progressCircle.style.strokeDashoffset = offset;
-        percentText.textContent = percent + '%';
+            const offset = circumference - (percent / 100) * circumference;
+            progressCircle.style.strokeDashoffset = offset;
+            percentText.textContent = percent + '%';
 
-        if (percent > 70) {
+            if (percent > 70) {
             progressCircle.style.stroke = '#2a9d8f';
             percentText.style.fill = '#2a9d8f';
             colorStatus.textContent = 'Nível alto - Bom abastecimento 💧';
             colorStatus.style.color = '#2a9d8f';
-        } else if (percent > 40) {
+            } else if (percent > 40) {
             progressCircle.style.stroke = '#f4a261';
             percentText.style.fill = '#f4a261';
             colorStatus.textContent = 'Nível médio - Atenção ⚠️';
             colorStatus.style.color = '#f4a261';
-        } else {
+            } else {
             progressCircle.style.stroke = '#e76f51';
             percentText.style.fill = '#e76f51';
             colorStatus.textContent = 'Nível baixo - Reabastecer urgente 🔥';
             colorStatus.style.color = '#e76f51';
-        }
+            }
         }
 
         const ctx = document.getElementById('chart').getContext('2d');
         const chartData = {
-        labels: [],
-        datasets: [{
+            labels: [],
+            datasets: [{
             label: 'Nível (%)',
             data: [],
             fill: true,
@@ -159,64 +171,66 @@
             tension: 0.3,
             pointRadius: 4,
             pointHoverRadius: 6,
-        }]
+            }]
         };
 
         const nivelChart = new Chart(ctx, {
-        type: 'line',
-        data: chartData,
-        options: {
+            type: 'line',
+            data: chartData,
+            options: {
             responsive: true,
             animation: { duration: 1000 },
             scales: {
-            y: {
+                y: {
                 suggestedMin: 0,
                 suggestedMax: 100,
                 ticks: { stepSize: 10 }
-            },
-            x: {
+                },
+                x: {
                 ticks: {
-                maxRotation: 45,
-                minRotation: 45
+                    maxRotation: 45,
+                    minRotation: 45
+                }
                 }
             }
             }
-        }
         });
 
-        function formatHora(date) {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        function formatHora(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         }
 
         async function atualizarDashboard() {
-        try {
+            try {
             const res = await fetch('https://senai-api.onrender.com/api/nivel/historico');
             const dados = await res.json();
 
             if (!Array.isArray(dados) || dados.length === 0) {
-            throw new Error('Sem dados no histórico');
+                throw new Error('Sem dados no histórico');
             }
 
+            // Atualiza o gráfico circular com o último nível
             const ultimo = dados[dados.length - 1];
             setProgress(ultimo.nivel);
 
+            // Atualiza o gráfico de linha com o histórico
             chartData.labels = [];
             chartData.datasets[0].data = [];
 
             dados.forEach(dado => {
-            chartData.labels.push(formatHora(dado.timestamp));
-            chartData.datasets[0].data.push(dado.nivel);
+                chartData.labels.push(formatHora(dado.timestamp));
+                chartData.datasets[0].data.push(dado.nivel);
             });
 
             nivelChart.update();
 
-        } catch (err) {
+            } catch (err) {
             console.error('Erro ao buscar dados:', err);
             colorStatus.textContent = 'Erro ao carregar histórico 😢';
             colorStatus.style.color = '#e76f51';
+            }
         }
-        }
-
 
         setInterval(atualizarDashboard, 5000);
         atualizarDashboard();
